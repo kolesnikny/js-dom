@@ -12,7 +12,89 @@ const HTMLLiElements = responseData
 
 root.append(...HTMLLiElements);
 
+/**
+ *
+ * @param {Object} user
+ * @returns
+ */
 function createUserCard(user) {
+    const cardName = createElement(
+        'h3',
+        {
+            classNames: ['cardName'],
+        },
+        document.createTextNode(`${user.firstName}  ${user.lastName}`)
+    );
+
+    const lorem =
+        'Lorem, ipsum dolor sit amet consectetur adipisicing elit. Distinctio sed corrupti saepe. Dolores maiores dolor, quam ratione assumenda ea reiciendis.';
+    const cardDescription = createElement(
+        'p',
+        {
+            classNames: ['cardDescription,'],
+        },
+        document.createTextNode(lorem)
+    );
+
+    return createElement(
+        'li',
+        {
+            classNames: ['cardWrapper'],
+        },
+        createElement(
+            'article',
+            {
+                classNames: ['cardConteiner'],
+            },
+            createImgWrapper(user),
+            cardName,
+            cardDescription,
+            getContactsLinksList(user.contacts)
+        )
+    );
+}
+
+/**
+ *
+ * @param {string} type
+ * @param {Object} options
+ *  @param {sting[]} options.classNames
+ *  @param {function} options.onClick
+ * @param {object} options.attributes
+ * @param {Node} children
+ * @returns {HTMLElement}
+ */
+
+function createElement(
+    type,
+    { classNames = [], eventListeners = {}, attributes = {}, dataset = {} },
+    ...children
+) {
+    const elem = document.createElement(type);
+    elem.classList.add(...classNames);
+
+    for (const [attrName, attrValue] of Object.entries(attributes)) {
+        elem.setAttribute(attrName, attrValue);
+    }
+
+    for (const [key, value] of Object.entries(dataset)) {
+        elem.dataset[key] = value;
+    }
+
+    for (const [type, handler] of Object.entries(eventListeners)) {
+        elem.addEventListener(type, handler);
+    }
+
+    elem.append(...children);
+    return elem;
+}
+
+/**
+ *@description
+ * @param {Object} contacts
+ * @returns {HTMLElements} return <div> with image
+ */
+function createImgWrapper(user) {
     const initials = createElement(
         'div',
         {
@@ -48,76 +130,17 @@ function createUserCard(user) {
     );
     imageWrapper.style.backgroundColor = stringToColor(user.firstName);
 
-    const cardName = createElement(
-        'h3',
-        {
-            classNames: ['cardName'],
-        },
-        document.createTextNode(`${user.firstName}  ${user.lastName}`)
-    );
-
-    const lorem =
-        'Lorem, ipsum dolor sit amet consectetur adipisicing elit. Distinctio sed corrupti saepe. Dolores maiores dolor, quam ratione assumenda ea reiciendis.';
-    const cardDescription = createElement(
-        'p',
-        {
-            classNames: ['cardDescription,'],
-        },
-        document.createTextNode(lorem)
-    );
-    const socialLinks = createElement(
-        'ul',
-        {
-            classNames: ['socialLinksConteiner'],
-        },
-        ...getContactsLinksList(user.contacts)
-    );
-    const cardConteiner = createElement(
-        'article',
-        {
-            classNames: ['cardConteiner'],
-        },
-        imageWrapper,
-        cardName,
-        cardDescription,
-        socialLinks
-    );
-
-    return createElement(
-        'li',
-        {
-            classNames: ['cardWrapper'],
-        },
-        cardConteiner
-    );
+    return imageWrapper;
 }
 
-function createElement(
-    type,
-    { classNames = [], eventListeners = {}, attributes = {}, dataset = {} },
-    ...children
-) {
-    const elem = document.createElement(type);
-    elem.classList.add(...classNames);
-
-    for (const [attrName, attrValue] of Object.entries(attributes)) {
-        elem.setAttribute(attrName, attrValue);
-    }
-
-    for (const [key, value] of Object.entries(dataset)) {
-        elem.dataset[key] = value;
-    }
-
-    for (const [type, handler] of Object.entries(eventListeners)) {
-        elem.addEventListener(type, handler);
-    }
-
-    elem.append(...children);
-    return elem;
-}
-
+/**
+ *@description
+ * @param {Array} contacts
+ * @returns {HTMLElements} return <ul> with social links
+ */
 function getContactsLinksList(contacts) {
     const socialLinks = [];
+
     for (const url of contacts) {
         const img = createElement('img', {
             classNames: ['socialImg'],
@@ -146,7 +169,11 @@ function getContactsLinksList(contacts) {
         socialLinks.push(li);
     }
 
-    return socialLinks;
+    return createElement(
+        'ul',
+        { classNames: ['socialLinksConteiner'] },
+        ...socialLinks
+    );
 }
 
 /* EVENT HANDLERS */
