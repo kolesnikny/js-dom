@@ -1,0 +1,181 @@
+'use_strict';
+
+const SOCIAL_CONTACTS = new Map();
+SOCIAL_CONTACTS.set('www.facebook.com', './assets/img/icons/facebook.svg');
+SOCIAL_CONTACTS.set('www.instagram.com', './assets/img/icons/instagram.svg');
+SOCIAL_CONTACTS.set('twitter.com', './assets/img/icons/twitter.svg');
+
+const root = document.querySelector('#root');
+const HTMLLiElements = responseData
+    .filter((user) => user.firstName && user.lastName)
+    .map((user) => createUserCard(user));
+
+root.append(...HTMLLiElements);
+
+function createUserCard(user) {
+    const initials = createElement(
+        'div',
+        {
+            classNames: ['initials'],
+        },
+        document.createTextNode(user.firstName[0] || '')
+    );
+
+    createElement('img', {
+        classNames: ['cardImage'],
+        eventListeners: {
+            error: handleImageError,
+            load: handleImageLoad,
+        },
+        attributes: {
+            src: user.profilePicture,
+            alt: `${user.firstName} ${user.lastName}`,
+        },
+        dataset: {
+            id: user.id,
+        },
+    });
+
+    const imageWrapper = createElement(
+        'div',
+        {
+            classNames: ['cardImageWrapper'],
+            attributes: {
+                id: `wrapper${user.id}`,
+            },
+        },
+        initials
+    );
+    imageWrapper.style.backgroundColor = stringToColor(user.firstName);
+
+    const cardName = createElement(
+        'h3',
+        {
+            classNames: ['cardName'],
+        },
+        document.createTextNode(`${user.firstName}  ${user.lastName}`)
+    );
+
+    const lorem =
+        'Lorem, ipsum dolor sit amet consectetur adipisicing elit. Distinctio sed corrupti saepe. Dolores maiores dolor, quam ratione assumenda ea reiciendis.';
+    const cardDescription = createElement(
+        'p',
+        {
+            classNames: ['cardDescription,'],
+        },
+        document.createTextNode(lorem)
+    );
+    const socialLinks = createElement(
+        'ul',
+        {
+            classNames: ['socialLinksConteiner'],
+        },
+        ...getContactsLinksList(user.contacts)
+    );
+    const cardConteiner = createElement(
+        'article',
+        {
+            classNames: ['cardConteiner'],
+        },
+        imageWrapper,
+        cardName,
+        cardDescription,
+        socialLinks
+    );
+
+    return createElement(
+        'li',
+        {
+            classNames: ['cardWrapper'],
+        },
+        cardConteiner
+    );
+}
+
+function createElement(
+    type,
+    { classNames = [], eventListeners = {}, attributes = {}, dataset = {} },
+    ...children
+) {
+    const elem = document.createElement(type);
+    elem.classList.add(...classNames);
+
+    for (const [attrName, attrValue] of Object.entries(attributes)) {
+        elem.setAttribute(attrName, attrValue);
+    }
+
+    for (const [key, value] of Object.entries(dataset)) {
+        elem.dataset[key] = value;
+    }
+
+    for (const [type, handler] of Object.entries(eventListeners)) {
+        elem.addEventListener(type, handler);
+    }
+
+    elem.append(...children);
+    return elem;
+}
+
+function getContactsLinksList(contacts) {
+    const socialLinks = [];
+    for (const url of contacts) {
+        const img = createElement('img', {
+            classNames: ['socialImg'],
+            attributes: {
+                src: SOCIAL_CONTACTS.get(new URL(url).hostname),
+                alt: url,
+            },
+        });
+        const a = createElement(
+            'a',
+            {
+                attributes: {
+                    href: url,
+                },
+            },
+            img
+        );
+        const li = createElement(
+            'li',
+            {
+                classNames: ['socialLink'],
+            },
+            a
+        );
+
+        socialLinks.push(li);
+    }
+
+    return socialLinks;
+}
+
+/* EVENT HANDLERS */
+
+function handleImageError({ target }) {
+    target.remove();
+}
+
+function handleImageLoad(event) {
+    const {
+        target,
+        target: {
+            dataset: { id },
+        },
+    } = event;
+    document.getElementById(`wrapper${id}`).append(target);
+}
+
+/* Utils */
+
+function stringToColor(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    let colour = '#';
+    for (let i = 0; i < 3; i++) {
+        let value = (hash >> (i * 8)) & 0xff;
+        colour += ('00' + value.toString(16)).substr(-2);
+    }
+    return colour;
+}
