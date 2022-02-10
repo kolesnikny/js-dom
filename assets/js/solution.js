@@ -6,11 +6,20 @@ SOCIAL_CONTACTS.set('www.instagram.com', './assets/img/icons/instagram.svg');
 SOCIAL_CONTACTS.set('twitter.com', './assets/img/icons/twitter.svg');
 
 const root = document.querySelector('#root');
-const HTMLLiElements = responseData
-    .filter((user) => user.firstName && user.lastName)
-    .map((user) => createUserCard(user));
+// const HTMLLiElements = responseData
+//     .filter((user) => user.firstName && user.lastName)
+//     .map((user) => createUserCard(user));
 
-root.append(...HTMLLiElements);
+// root.append(...HTMLLiElements);
+
+fetch('./assets/js/constants/jsonData.json')
+    .then((response) => {
+        return response.json();
+    })
+    .then((jsonsArray) => {
+        root.append(...jsonsArray.map((user) => createUserCard(user)));
+    })
+    .catch((error) => console.log(error));
 
 /**
  *
@@ -45,6 +54,9 @@ function createUserCard(user) {
             'article',
             {
                 classNames: ['cardConteiner'],
+                eventListeners: {
+                    click: highlightCard,
+                },
             },
             createImgWrapper(user),
             cardName,
@@ -58,8 +70,8 @@ function createUserCard(user) {
  *
  * @param {string} type
  * @param {Object} options
- *  @param {sting[]} options.classNames
- *  @param {function} options.onClick
+ * @param {sting[]} options.classNames
+ * @param {function} options.onClick
  * @param {object} options.attributes
  * @param {Node} children
  * @returns {HTMLElement}
@@ -190,6 +202,16 @@ function handleImageLoad(event) {
         },
     } = event;
     document.getElementById(`wrapper${id}`).append(target);
+}
+
+function highlightCard(event) {
+    const {
+        target: {
+            dataset: { id },
+        },
+    } = event;
+
+    this.classList.add('cardWrapper-checked');
 }
 
 /* Utils */
