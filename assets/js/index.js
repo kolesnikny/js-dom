@@ -1,65 +1,95 @@
-'use strict';
+'use_strict';
+
+/*
+    по клику - выделять карточку рамкой. по выделению сохранить id вібраного пользователя в массив. 
+    В хедере сайта рендерить имена вібраніх юзеров. Реализовать функционал удаления имен из єтого 
+    спискаю Когда имя удаляется удалить подсвеку
+*/
+
+const SOCIAL_CONTACTS = new Map();
+SOCIAL_CONTACTS.set('www.facebook.com', './assets/img/icons/facebook.svg');
+SOCIAL_CONTACTS.set('www.instagram.com', './assets/img/icons/instagram.svg');
+SOCIAL_CONTACTS.set('twitter.com', './assets/img/icons/twitter.svg');
 
 const root = document.querySelector('#root');
+const header = document.querySelector('h2');
+// const HTMLLiElements = responseData
+//     .filter((user) => user.firstName && user.lastName)
+//     .map((user) => createUserCard(user));
 
-// const HTMLLiElements = responseData.filter((user) => user.firstName && user.id && user.description).map((user)=>createUserCard(user));
+// root.append(...HTMLLiElements);
 
-const HTMLLiElements = responseData.map((user) => createUserCard(user));
+fetch('./assets/js/constants/jsonData.json')
+    .then((response) => {
+        return response.json();
+    })
+    .then((jsonsArray) => {
+        root.append(...jsonsArray.map((user) => createUserCard(user)));
 
-root.append(...HTMLLiElements);
+    })
+    .catch((error) => console.log(error));
 
+
+
+/**
+ *
+ * @param {Object} user
+ * @returns
+ */
 function createUserCard(user) {
-    const h3 = createElement(
+    const cardName = createElement(
         'h3',
-        { classNames: ['cardName'] },
-        document.createTextNode(user.firstName + user.lastName)
+        {
+            classNames: ['cardName'],
+        },
+        document.createTextNode(`${user.firstName}  ${user.lastName}`)
     );
 
     const lorem =
-        'Lorem ipsum dolor sit amet consectetur adipisicing elit. Repudiandae, eius voluptas aut quos exercitationem, impedit saepe mollitia vitae nihil ipsum nam.';
-
-    const p = createElement(
+        'Lorem, ipsum dolor sit amet consectetur adipisicing elit. Distinctio sed corrupti saepe. Dolores maiores dolor, quam ratione assumenda ea reiciendis.';
+    const cardDescription = createElement(
         'p',
-        { classNames: ['cardDescription'] },
-        document.createTextNode(user.description)
+        {
+            classNames: ['cardDescription,'],
+        },
+        document.createTextNode(lorem)
     );
 
-    const article = createElement(
-        'article',
-        { classNames: ['cardConteiner'] },
-        createImageWrapper(user),
-        h3,
-        p
+    return createElement(
+        'li',
+        {
+            classNames: ['cardWrapper'],
+            eventListeners: {
+                click: checkedCard,
+            },
+            attributes: {
+                id: `user${user.id}`,
+            },
+        },
+        createElement(
+            'article',
+            {
+                classNames: ['cardConteiner'],
+            },
+            createImgWrapper(user),
+            cardName,
+            cardDescription,
+            getContactsLinksList(user.contacts)
+        )
     );
-
-    return createElement('li', { classNames: ['cardWrapper'] }, article);
 }
+
 
 /**
  *
  * @param {string} type
  * @param {Object} options
- *  @param {sting[]} options.classNames
- *  @param {function} options.onClick
+ * @param {sting[]} options.classNames
+ * @param {function} options.onClick
  * @param {object} options.attributes
  * @param {Node} children
  * @returns {HTMLElement}
  */
-/*
-Example ob ATTRIBUTES object
-{
-    src: 'https://links.com',
-    alt: 'text',
-    title: 'description',
-}
-const options = {
-    classNames: [''],
-    attributes: {
-        href: '////',
-        title: ''
-    }
-}
-*/
 
 function createElement(
     type,
@@ -85,17 +115,21 @@ function createElement(
     return elem;
 }
 
-function createImageWrapper(user) {
-    const imageWrapper = document.createElement('div');
-    imageWrapper.classList.add('cardImageWrapper');
-    imageWrapper.style.backgroundColor = stringToColor(user.firstName);
-    imageWrapper.setAttribute('id', `wrapper${user.id}`);
+/**
+ *@description
+ * @param {Object} contacts
+ * @returns {HTMLElements} return <div> with image
+ */
+function createImgWrapper(user) {
+    const initials = createElement(
+        'div',
+        {
+            classNames: ['initials'],
+        },
+        document.createTextNode(user.firstName[0] || '')
+    );
 
-    const initials = document.createElement('div');
-    initials.classList.add('initials');
-    initials.append(document.createTextNode(user.firstName[0] || ''));
-
-    const imageOptions = {
+    createElement('img', {
         classNames: ['cardImage'],
         eventListeners: {
             error: handleImageError,
@@ -108,17 +142,78 @@ function createImageWrapper(user) {
         dataset: {
             id: user.id,
         },
-    };
+    });
 
-    createElement('img', imageOptions);
-
-    imageWrapper.append(initials);
+    const imageWrapper = createElement(
+        'div',
+        {
+            classNames: ['cardImageWrapper'],
+            attributes: {
+                id: `wrapper${user.id}`,
+            },
+        },
+        initials
+    );
+    imageWrapper.style.backgroundColor = stringToColor(user.firstName);
 
     return imageWrapper;
 }
 
-/* EVENT HANDLERS */
+/**
+ *@description
+ * @param {Array} contacts
+ * @returns {HTMLElements} return <ul> with social links
+ */
+function getContactsLinksList(contacts) {
+    const socialLinks = [];
 
+    for (const url of contacts) {
+        const img = createElement('img', {
+            classNames: ['socialImg'],
+            attributes: {
+                src: SOCIAL_CONTACTS.get(new URL(url).hostname),
+                alt: url,
+            },
+        });
+        const a = createElement(
+            'a',
+            {
+                attributes: {
+                    href: url,
+                },
+            },
+            img
+        );
+        const li = createElement(
+            'li',
+            {
+                classNames: ['socialLink'],
+            },
+            a
+        );
+
+        socialLinks.push(li);
+    }
+
+    return createElement(
+        'ul',
+        { classNames: ['socialLinksConteiner'] },
+        ...socialLinks
+    );
+}
+
+function getHeaderData(){
+    const headerNames = document.querySelectorAll('.cardWrapper-checked')
+    let res = [];
+    headerNames.forEach((item)=>{
+        res.push(item.querySelector('h3').textContent);
+    });
+    return  res.length ? res.join(', ') : 'Users';
+}
+
+
+
+/* EVENT HANDLERS*/
 function handleImageError({ target }) {
     target.remove();
 }
@@ -133,8 +228,14 @@ function handleImageLoad(event) {
     document.getElementById(`wrapper${id}`).append(target);
 }
 
-/* Utils */
+function checkedCard({ target }) {
+    const element = document.getElementById(this.id);
 
+    element.classList.toggle('cardWrapper-checked');
+    header.textContent = getHeaderData();
+}
+
+/* Utils */
 function stringToColor(str) {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
